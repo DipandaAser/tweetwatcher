@@ -1,43 +1,48 @@
 package config
 
 import (
-	"encoding/json"
+	"context"
 	"errors"
-	"github.com/DipandaAser/tweetwatcher/bot/suscriber"
-	"io/ioutil"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Configuration struct {
-	Hashtag    string                `json:"Hashtag"`
-	BotToken   string                `json:"BotToken"`
-	Port       string                `json:"Port"`
-	PublicURL  string                `json:"PublicURL"`
-	Suscribers []suscriber.Suscriber `json:"Suscribers"`
+	Hashtag    string
+	BotToken   string
+	Port       string
+	PublicURL  string
+	MongodbURI string
+	DBName     string
 }
+
+// ProjectConfig holds info of project settings
+var ProjectConfig = &Configuration{}
+
+// MongoCtx is the mongo context
+var MongoCtx *context.Context
+
+// DB is the mongo db
+var DB *mongo.Database
 
 // Check check if requires fields are provided
 func (config *Configuration) Check() error {
 	if config.Hashtag == "" {
-		return errors.New("Please specify a Hashtag in config file.")
+		return errors.New("please specify a \"HASHTAG\" env var")
 	}
 	if config.BotToken == "" {
-		return errors.New("Please specify a BotToken in config file.")
+		return errors.New("please specify a \"BOT_TOKEN\" env var")
 	}
 	if config.Port == "" {
-		return errors.New("Please specify a Port in config file.")
+		return errors.New("please specify a \"PORT\" env var")
 	}
 	if config.PublicURL == "" {
-		return errors.New("Please specify the PublicURL webbhook of the bot in config file.")
+		return errors.New("please specify the \"PUBLIC_URL\"  env var")
+	}
+	if config.MongodbURI == "" {
+		return errors.New("please specify a \"MONGO_URI\" env var")
+	}
+	if config.DBName == "" {
+		return errors.New("please specify the \"DB_NAME\" env var")
 	}
 	return nil
-}
-
-func CreateConfigTemplate() {
-	var conf Configuration
-	var suscriber suscriber.Suscriber
-	conf.Suscribers = append(conf.Suscribers, suscriber)
-	jsonData, err := json.Marshal(conf)
-	if err == nil {
-		ioutil.WriteFile("config-template.json", jsonData, 0777)
-	}
 }
