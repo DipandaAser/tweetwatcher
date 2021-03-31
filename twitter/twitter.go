@@ -2,15 +2,15 @@ package twitter
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/DipandaAser/tweetwatcher/bot"
 	"github.com/DipandaAser/tweetwatcher/config"
-	"github.com/DipandaAser/tweetwatcher/utils"
-	"github.com/go-rod/rod"
 	twitterscraper "github.com/n0madic/twitter-scraper"
 	"log"
+	"net/http"
+	"time"
 )
-
-var ProjectConfig *config.Configuration
 
 // GetTweets will fetch all tweets with the hashtag define in config file
 func GetTweets() {
@@ -19,44 +19,46 @@ func GetTweets() {
 	twitterscraper.SetSearchMode(twitterscraper.SearchLatest)
 
 	for {
-		for tweet := range twitterscraper.SearchTweets(context.Background(), ProjectConfig.Hashtag, 50) {
-			if tweet.Error != nil {
+		for tweetResult := range twitterscraper.SearchTweets(context.Background(), config.ProjectConfig.Hashtag, 10) {
+			if tweetResult.Error != nil {
 				continue
 			}
-			screenshotFile := tweet.ID + ".png"
 
-			// If the tweet already exist we stop our current list of tweet and we restard search
-			if utils.FileExists(screenshotFile) {
-				break
+			// If the tweet already exist we stop our current list of tweet and we restart search
+			if IsExist(tweetResult.ID) {
+				continue
 			}
 
 			log.Println("#### New tweet found ####")
-			log.Printf("ID: %s\n", tweet.ID)
-			log.Printf("User: %s\n", tweet.Username)
-			log.Printf("Link: %s\n\n", tweet.PermanentURL)
 
-			// If error occur when taking screenshoot, we send text message instead of photo message
-			err := takeScreenshoot(tweet.PermanentURL, tweet.ID+".png")
+			date, _ := tweetResult.TimeParsed.MarshalText()
+			_, _ = Save(tweetResult.ID, tweetResult.Text, tweetResult.Username, tweetResult.PermanentURL, string(date))
+
+			// If error occur when taking screenshot, we send text message instead of photo message
+			photo, err := takeScreenshot(tweetResult.ID)
 			if err == nil {
-				go bot.BulkSendPhoto(screenshotFile, tweet.PermanentURL, tweet.Username)
+				go bot.BulkSendPhoto(photo, tweetResult.PermanentURL, tweetResult.Username)
 			} else {
-				go bot.BulkSendText(tweet.Text, tweet.PermanentURL, tweet.Username)
+				go bot.BulkSendText(tweetResult.Text, tweetResult.PermanentURL, tweetResult.Username)
 			}
 		}
+
+		fmt.Println("Sleep")
+		time.Sleep(10 * time.Second)
 	}
 }
 
-func takeScreenshoot(url string, filename string) error {
-	browser := rod.New().MustConnect()
-	defer browser.MustClose()
-	page := browser.MustPage(url).MustWaitLoad()
+func takeScreenshot(tweetId string) (string, error) {
 
-	// We identified the tweet with this selector
-	tweetNode, err := page.Element("article:last-of-type.css-1dbjc4n")
+	url := fmt.Sprintf("https://tweet2image.vercel.app/%s.png?lang=en&tz=0&theme=light&scale=1", tweetId)
+	rep, err := http.Get(url)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	tweetNode.MustScreenshot(filename)
-	return nil
+	if rep.StatusCode != 200 {
+		return "", errors.New(fmt.Sprintf("request fail with status code %d", rep.StatusCode))
+	}
+
+	return url, nil
 }
