@@ -1,0 +1,15 @@
+# Exclude packages
+
+# Exlcude main go file and module files
+go.mod
+go.sum
+
+# Other files
+README.md
+
+# Exclude "build-time" ignore files.
+.dockerignore
+.gcloudignore
+
+# Exclude git history and configuration.
+.gitignore
