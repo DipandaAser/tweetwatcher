@@ -57,7 +57,7 @@ func GetTweets() {
 			}
 		}
 
-		fmt.Println("#### Sleep ####")
+		log.Println("#### Sleep ####")
 		time.Sleep(scrapDelay)
 	}
 }
