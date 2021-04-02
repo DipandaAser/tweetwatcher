@@ -9,52 +9,55 @@ import (
 
 func startCommandHAndler(m *tb.Message) {
 	var message string
+	userName := getUserNameOrTitle(m)
 
-	//We try to fetch if that chat_id is already in the suscriber list and if the status of receiving tweet is ok or not
+	//We try to fetch if that chat_id is already in the subscriber list and if the status of receiving tweet is ok or not
 	//If not we add it with the status ok
-	//If yes we say him(her) he already suscribe to receive tweet
+	//If yes we say him(her) he already subscribe to receive tweet
 
 	chatID := fmt.Sprintf("%d", m.Chat.ID)
+
 	if subscriber.IsExist(chatID) {
 		if !subscriber.IsActivate(chatID) {
 			if err := subscriber.ActivateSubscriber(chatID); err == nil {
-				message = fmt.Sprintf("Hey @%s ! \nYour status has change you will now receive all %s tweets. \nBy @iamdipanda", m.Chat.Username, config.ProjectConfig.Hashtag)
+				message = fmt.Sprintf("Hey @%s ! \nYour status has change you will now receive all %s tweets. \nBy @iamdipanda", userName, config.ProjectConfig.Hashtag)
 			} else {
-				message = fmt.Sprintf("Hey @%s ! \nAn error occur when we change your status. \nTry again later. \nBy @iamdipanda", m.Chat.Username)
+				message = fmt.Sprintf("Hey @%s ! \nAn error occur when we change your status. \nTry again later. \nBy @iamdipanda", userName)
 			}
 		} else {
-			message = fmt.Sprintf("Hey @%s ! \nYour status has already set to receive all %s tweets. \nBy @iamdipanda", m.Chat.Username, config.ProjectConfig.Hashtag)
+			message = fmt.Sprintf("Hey @%s ! \nYour status has already set to receive all %s tweets. \nBy @iamdipanda", userName, config.ProjectConfig.Hashtag)
 		}
 	} else {
-		_, err := subscriber.New(m.Sender.Username, chatID)
+		_, err := subscriber.New(userName, chatID)
 		if err == nil {
-			message = fmt.Sprintf("Hey @%s ! \nYou will now receive all %s tweets. \nBy @iamdipanda", m.Chat.Username, config.ProjectConfig.Hashtag)
+			message = fmt.Sprintf("Hey @%s ! \nYou will now receive all %s tweets. \nBy @iamdipanda", userName, config.ProjectConfig.Hashtag)
 		} else {
-			message = fmt.Sprintf("Hey @%s ! \nAn error occur. \nTry again later. \nBy @iamdipanda", m.Chat.Username)
+			message = fmt.Sprintf("Hey @%s ! \nAn error occur. \nTry again later. \nBy @iamdipanda", userName)
 		}
 	}
 
 	// We send the message
-	_, _ = myBot.Send(m.Sender, message)
+	_, _ = myBot.Send(m.Chat, message)
 }
 
 func stopCommandHandler(m *tb.Message) {
 
 	var message string
+	userName := getUserNameOrTitle(m)
 
 	chatID := fmt.Sprintf("%d", m.Chat.ID)
 	if subscriber.IsExist(chatID) {
 		if subscriber.IsActivate(chatID) {
 			if err := subscriber.DesactivateSubscriber(chatID); err == nil {
-				message = fmt.Sprintf("Hey @%s ! \nYour status has change you will not receive all %s tweets. \nBy @iamdipanda", m.Chat.Username, config.ProjectConfig.Hashtag)
+				message = fmt.Sprintf("Hey @%s ! \nYour status has change you will not receive all %s tweets. \nBy @iamdipanda", userName, config.ProjectConfig.Hashtag)
 			} else {
-				message = fmt.Sprintf("Hey @%s ! \nAn error occur when we change your status. \nTry again later. \nBy @iamdipanda", m.Chat.Username)
+				message = fmt.Sprintf("Hey @%s ! \nAn error occur when we change your status. \nTry again later. \nBy @iamdipanda", userName)
 			}
 		} else {
-			message = fmt.Sprintf("Hey @%s ! \nYour status has already set to not receive all %s tweets. \nBy @iamdipanda", m.Chat.Username, config.ProjectConfig.Hashtag)
+			message = fmt.Sprintf("Hey @%s ! \nYour status has already set to not receive all %s tweets. \nBy @iamdipanda", userName, config.ProjectConfig.Hashtag)
 		}
 	} else {
-		message = fmt.Sprintf("Hey @%s ! \n You have not yet enable the reception of all %s tweets. Send the /start command to enable it.  \n By @iamdipanda", m.Chat.Username, config.ProjectConfig.Hashtag)
+		message = fmt.Sprintf("Hey @%s ! \n You have not yet enable the reception of all %s tweets. Send the /start command to enable it.  \n By @iamdipanda", userName, config.ProjectConfig.Hashtag)
 	}
 
 	// We send the message
@@ -79,4 +82,11 @@ func helpCommandHandler(m *tb.Message) {
 
 	// We send the message
 	_, _ = myBot.Send(m.Chat, message)
+}
+
+func getUserNameOrTitle(m *tb.Message) string {
+	if m.FromGroup() || m.FromChannel() {
+		return m.Chat.Title
+	}
+	return m.Sender.Username
 }

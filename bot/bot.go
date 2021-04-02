@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	channelStartCommand = "/start watch"
-	channelStopCommand  = "/stop watch"
+	channelStartCommand = "start watch"
+	channelStopCommand  = "stop watch"
 )
 
 var myBot *tb.Bot
@@ -49,7 +49,7 @@ func Start() {
 	myBot.Handle("/help", helpCommandHandler)
 
 	// For channel we use text to detect
-	myBot.Handle(tb.OnText, func(m *tb.Message) {
+	myBot.Handle(tb.OnChannelPost, func(m *tb.Message) {
 
 		// filter to receive this alternative only from channel
 		if !m.FromChannel() {
