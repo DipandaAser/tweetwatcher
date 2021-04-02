@@ -68,6 +68,13 @@ func helpCommandHandler(m *tb.Message) {
 		message += fmt.Sprintf("- %s : %s \n", command.Text, command.Description)
 	}
 
+	// For channel help
+	message += fmt.Sprintf(
+		"For Channel Help\n"+
+			"If the bot is in a channel\n"+
+			"- write << %s >> to start\n"+
+			"- write << %s >> to stop\n", channelStartCommand, channelStopCommand)
+
 	message += "By @iamdipanda"
 
 	// We send the message

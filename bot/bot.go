@@ -8,6 +8,11 @@ import (
 	"log"
 )
 
+const (
+	channelStartCommand = "/start watch"
+	channelStopCommand  = "/stop watch"
+)
+
 var myBot *tb.Bot
 var commands []tb.Command
 
@@ -43,7 +48,28 @@ func Start() {
 
 	myBot.Handle("/help", helpCommandHandler)
 
-	log.Println("#### Bot start sucessfully ####")
+	// For channel we use text to detect
+	myBot.Handle(tb.OnText, func(m *tb.Message) {
+
+		// filter to receive this alternative only from channel
+		if !m.FromChannel() {
+			return
+		}
+
+		//if m.Text == "/start watch"
+		switch m.Text {
+		case channelStartCommand:
+			startCommandHAndler(m)
+			break
+		case channelStopCommand:
+			stopCommandHandler(m)
+			break
+		default:
+			break
+		}
+	})
+
+	log.Println("#### Bot start successfully ####")
 	myBot.Start()
 }
 
