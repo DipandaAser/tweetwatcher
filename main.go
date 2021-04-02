@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"log"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -21,12 +22,16 @@ func main() {
 	config.ProjectConfig.DBName = os.Getenv("DB_NAME")
 	config.ProjectConfig.MongodbURI = os.Getenv("MONGO_URI")
 	config.ProjectConfig.PublicURL = os.Getenv("PUBLIC_URL")
+	delay, err := strconv.Atoi(os.Getenv("SCRAP_DELAY"))
+	if err == nil {
+		config.ProjectConfig.ScrapDelay = delay
+	}
 
 	ctx := context.TODO()
 	config.MongoCtx = &ctx
 
 	// Check requires var to start program
-	err := config.ProjectConfig.Check()
+	err = config.ProjectConfig.Check()
 	if err != nil {
 		log.Fatal(err)
 	}

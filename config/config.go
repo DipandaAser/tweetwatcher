@@ -13,6 +13,8 @@ type Configuration struct {
 	PublicURL  string
 	MongodbURI string
 	DBName     string
+	// ScrapDelay represent the interval before the scrapper perform another scraping session
+	ScrapDelay int
 }
 
 // ProjectConfig holds info of project settings

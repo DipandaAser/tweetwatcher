@@ -6,30 +6,44 @@ import (
 	"fmt"
 	"github.com/DipandaAser/tweetwatcher/bot"
 	"github.com/DipandaAser/tweetwatcher/config"
-	twitterscraper "github.com/n0madic/twitter-scraper"
+	twitterScraper "github.com/n0madic/twitter-scraper"
 	"log"
 	"net/http"
 	"time"
 )
 
+const minScrappingDelayInSecond = 10
+
 // GetTweets will fetch all tweets with the hashtag define in config file
 func GetTweets() {
 
-	log.Println("#### Start getting tweet ####")
-	twitterscraper.SetSearchMode(twitterscraper.SearchLatest)
+	var scrapDelay time.Duration
+	scrapDelay = minScrappingDelayInSecond * time.Second
+	if config.ProjectConfig.ScrapDelay < minScrappingDelayInSecond {
+		delay, err := time.ParseDuration(fmt.Sprintf("%vs", config.ProjectConfig.ScrapDelay))
+		if err == nil {
+			scrapDelay = delay
+		}
+	}
 
 	for {
-		for tweetResult := range twitterscraper.SearchTweets(context.Background(), config.ProjectConfig.Hashtag, 10) {
+
+		log.Println("#### Start fetching tweet ####")
+		scrapper := twitterScraper.New()
+		scrapper.SetSearchMode(twitterScraper.SearchLatest)
+
+		for tweetResult := range scrapper.SearchTweets(context.TODO(), config.ProjectConfig.Hashtag, 100) {
+
 			if tweetResult.Error != nil {
 				continue
 			}
 
-			// If the tweet already exist we stop our current list of tweet and we restart search
+			// If the tweet already exist we don't save and publish it
 			if IsExist(tweetResult.ID) {
 				continue
 			}
 
-			log.Println("#### New tweet found ####")
+			log.Println("New tweet found")
 
 			date, _ := tweetResult.TimeParsed.MarshalText()
 			_, _ = Save(tweetResult.ID, tweetResult.Text, tweetResult.Username, tweetResult.PermanentURL, string(date))
@@ -43,8 +57,8 @@ func GetTweets() {
 			}
 		}
 
-		fmt.Println("Sleep")
-		time.Sleep(10 * time.Second)
+		fmt.Println("#### Sleep ####")
+		time.Sleep(scrapDelay)
 	}
 }
 
