@@ -43,19 +43,25 @@ func main() {
 	}
 
 	// ─── WE REFRESH THE MONGO CONNECTION EACH 10MINS ──────────────────────────────────────
-	ticker := time.NewTicker(time.Minute * 10)
-	defer ticker.Stop()
+	mongoTicker := time.NewTicker(time.Minute * 10)
+	defer mongoTicker.Stop()
 	go func() {
-		for range ticker.C {
+		for range mongoTicker.C {
 			go MongoReconnectCheck()
 		}
 	}()
 
-	// Start bot
-	go bot.Start()
+	// Start fetch tweets
+	scrapperTicker := time.NewTicker(twitter.GetScrapDelay())
+	defer scrapperTicker.Stop()
+	go func() {
+		for range scrapperTicker.C {
+			go twitter.GetTweets()
+		}
+	}()
 
-	// GetTweets start fetch all tweets
-	twitter.GetTweets()
+	// Start bot
+	bot.Start()
 }
 
 // MongoConnect connects to mongoDB
