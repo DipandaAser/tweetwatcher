@@ -5,39 +5,24 @@ import (
 	"github.com/DipandaAser/tweetwatcher/bot"
 	"github.com/DipandaAser/tweetwatcher/config"
 	"github.com/DipandaAser/tweetwatcher/twitter"
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"log"
-	"os"
-	"strconv"
 	"time"
 )
 
 func main() {
 
-	config.ProjectConfig.Hashtag = os.Getenv("HASHTAG")
-	config.ProjectConfig.BotToken = os.Getenv("BOT_TOKEN")
-	config.ProjectConfig.Port = os.Getenv("PORT")
-	config.ProjectConfig.DBName = os.Getenv("DB_NAME")
-	config.ProjectConfig.MongodbURI = os.Getenv("MONGO_URI")
-	config.ProjectConfig.PublicURL = os.Getenv("PUBLIC_URL")
-	delay, err := strconv.Atoi(os.Getenv("SCRAP_DELAY"))
-	if err == nil {
-		config.ProjectConfig.ScrapDelay = delay
-	}
+	_ = godotenv.Load()
+	config.Init()
 
 	ctx := context.TODO()
 	config.MongoCtx = &ctx
 
-	// Check requires var to start program
-	err = config.ProjectConfig.Check()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	// ─── MONGO ──────────────────────────────────────────────────────────────────────
-	err = MongoConnect()
+	err := MongoConnect()
 	if err != nil {
 		log.Fatal("Can't setup mongodb")
 	}
@@ -56,7 +41,7 @@ func main() {
 	defer scrapperTicker.Stop()
 	go func() {
 		for range scrapperTicker.C {
-			go twitter.GetTweets()
+			twitter.GetTweets()
 		}
 	}()
 
