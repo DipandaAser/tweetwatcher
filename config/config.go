@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/mongo"
+	"log"
+	"os"
+	"strconv"
 )
 
 type Configuration struct {
@@ -26,8 +29,26 @@ var MongoCtx *context.Context
 // DB is the mongo db
 var DB *mongo.Database
 
+func Init() {
+	ProjectConfig.Hashtag = os.Getenv("HASHTAG")
+	ProjectConfig.BotToken = os.Getenv("BOT_TOKEN")
+	ProjectConfig.Port = os.Getenv("PORT")
+	ProjectConfig.DBName = os.Getenv("DB_NAME")
+	ProjectConfig.MongodbURI = os.Getenv("MONGO_URI")
+	ProjectConfig.PublicURL = os.Getenv("PUBLIC_URL")
+	delay, err := strconv.Atoi(os.Getenv("SCRAP_DELAY"))
+	if err == nil {
+		ProjectConfig.ScrapDelay = delay
+	}
+
+	err = ProjectConfig.check()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 // Check check if requires fields are provided
-func (config *Configuration) Check() error {
+func (config *Configuration) check() error {
 	if config.Hashtag == "" {
 		return errors.New("please specify a \"HASHTAG\" env var")
 	}
