@@ -56,7 +56,6 @@ func Start() {
 			return
 		}
 
-		//if m.Text == "/start watch"
 		switch m.Text {
 		case channelStartCommand:
 			startCommandHAndler(m)
