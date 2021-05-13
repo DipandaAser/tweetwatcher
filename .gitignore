@@ -9,3 +9,4 @@
 Dockerfile
 app
 .env
+/gcr-build.bat
