@@ -21,7 +21,7 @@ func GetTweets() {
 	scrapper := twitterScraper.New()
 	scrapper.SetSearchMode(twitterScraper.SearchLatest)
 
-	for tweetResult := range scrapper.SearchTweets(context.TODO(), config.ProjectConfig.Hashtag, 100) {
+	for tweetResult := range scrapper.SearchTweets(context.TODO(), fmt.Sprintf("#%s", config.ProjectConfig.Hashtag), 100) {
 
 		if tweetResult.Error != nil {
 			continue
