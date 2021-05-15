@@ -90,7 +90,7 @@ func BulkSendPhoto(tweetScreenshotUrl string, tweetLink string, tweetUserName st
 
 func BulkSendText(description string, tweetLink string, tweetUserName string) {
 
-	msg := fmt.Sprintf("New Tweet from : %s .\n\n-------\n\n %s \n\n-------\n\nLink: %s ", tweetUserName, description, tweetLink)
+	msg := fmt.Sprintf("New Tweet from : @%s .\n\n-------\n\n %s \n\n-------\n\nLink: %s ", tweetUserName, description, tweetLink)
 	chats, err := subscriber.GetActivatedSubscribers()
 	if err != nil {
 		return
