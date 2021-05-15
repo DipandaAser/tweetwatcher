@@ -5,6 +5,7 @@ A simple Telegram bot that send you a screenshot when there is a new tweet with 
 ## How to run
 
 First create a telegram bot. See the guide [here](https://core.telegram.org/bots#3-how-do-i-create-a-bot)
+
 Second create the .env file using env.example as template
 
 ### With binaries
@@ -28,12 +29,7 @@ Alternatively, to get latest and greatest run:
 go get -d -v ./...
 ```
 
-- Build
+- Run
 ```shell
-go build - o app
-```
-
-* Run
-```shell
-./app
+go run main.go
 ```
