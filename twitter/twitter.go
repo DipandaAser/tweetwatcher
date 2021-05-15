@@ -17,7 +17,6 @@ const minScrappingDelayInSecond = 10
 // GetTweets will fetch all tweets with the hashtag define in config file
 func GetTweets() {
 
-	log.Println("#### Start fetching tweet ####")
 	scrapper := twitterScraper.New()
 	scrapper.SetSearchMode(twitterScraper.SearchLatest)
 
@@ -46,7 +45,6 @@ func GetTweets() {
 		}
 	}
 
-	log.Println("#### Sleep ####")
 }
 
 func GetScrapDelay() time.Duration {
