@@ -4,100 +4,106 @@ import (
 	"fmt"
 	"github.com/DipandaAser/tweetwatcher/bot/subscriber"
 	"github.com/DipandaAser/tweetwatcher/config"
-	tb "gopkg.in/tucnak/telebot.v2"
+	tb "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
 )
 
-const (
-	channelStartCommand = "start watch"
-	channelStopCommand  = "stop watch"
-)
-
-var myBot *tb.Bot
-var commands []tb.Command
+var myBot *tb.BotAPI
 
 func Start() {
-	webhook := &tb.Webhook{
-		Listen:   ":" + config.ProjectConfig.Port,
-		Endpoint: &tb.WebhookEndpoint{PublicURL: config.ProjectConfig.PublicURL},
+
+	bot, err := tb.NewBotAPI(config.ProjectConfig.BotToken)
+	if err != nil {
+		log.Fatal(err)
 	}
+	myBot = bot
 
-	b, err := tb.NewBot(tb.Settings{
-		Token:   config.ProjectConfig.BotToken,
-		Poller:  webhook,
-		Verbose: false,
-	})
-
+	// We remove webhook to avoid conflict. Webhook can't exist when we use socket to connect our bot
+	_, err = bot.RemoveWebhook()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	myBot = b
+	// Setting all bot commands
+	_ = SetCommands()
 
-	// Setting all bot commands and create handler for each command
-	commands = []tb.Command{
-		{Text: "/start", Description: fmt.Sprintf("Activate the receptions of %s tweets.", config.ProjectConfig.Hashtag)},
-		{Text: "/stop", Description: fmt.Sprintf("Desactivate the receptions of %s tweets.", config.ProjectConfig.Hashtag)},
-		{Text: "/help", Description: "Display all bot commands"},
+	// Open the websocket and begin listening.
+	u := tb.NewUpdate(0)
+	u.Timeout = 60
+	updates, err := bot.GetUpdatesChan(u)
+	if err != nil {
+		log.Fatal(err)
 	}
-	_ = myBot.SetCommands(commands)
-
-	myBot.Handle("/start", startCommandHAndler)
-
-	myBot.Handle("/stop", stopCommandHandler)
-
-	myBot.Handle("/help", helpCommandHandler)
-
-	// For channel we use text to detect
-	myBot.Handle(tb.OnChannelPost, func(m *tb.Message) {
-
-		// filter to receive this alternative only from channel
-		if !m.FromChannel() {
-			return
-		}
-
-		switch m.Text {
-		case channelStartCommand:
-			startCommandHAndler(m)
-			break
-		case channelStopCommand:
-			stopCommandHandler(m)
-			break
-		default:
-			break
-		}
-	})
 
 	log.Println("#### Bot start successfully ####")
-	myBot.Start()
+
+	commands := getCommands()
+	for update := range updates {
+
+		// ignore any non-Message Updates
+		if update.Message == nil {
+			continue
+		}
+
+		// Check if the command is a registered command
+		if update.Message.IsCommand() {
+			cmd, cmdExist := commands[update.Message.Command()]
+			if cmdExist {
+
+				if cmd.Handler != nil {
+					cmd.Handler(update.Message)
+				}
+			}
+		}
+
+		// For channel we use text to detect
+		if update.Message.Chat.IsChannel() {
+			switch update.Message.Text {
+			case channelStartCommand:
+				startCommandHAndler(update.Message)
+				break
+			case channelStopCommand:
+				stopCommandHandler(update.Message)
+				break
+			default:
+				break
+			}
+		}
+
+	}
+
+	log.Println("#### Bot shutdown successfully ####")
 }
 
-func BulkSendPhoto(tweetScreenshotUrl string, tweetLink string, tweetUserName string) {
+func BulkSendPhoto(tweetScreenshotUrl string, tweetScreenshot []byte, tweetLink string, tweetUserName string) {
 
 	caption := fmt.Sprintf("New Tweet from : @%s .\n\n-------\n\nLink: %s ", tweetUserName, tweetLink)
-	photoMsg := &tb.Photo{Caption: caption, File: tb.FromURL(tweetScreenshotUrl)}
 
 	chats, err := subscriber.GetActivatedSubscribers()
 	if err != nil {
 		return
 	}
 
+	photo := tb.FileBytes{Bytes: tweetScreenshot}
 	for _, chat := range chats {
-		_, _ = myBot.Send(chat, photoMsg)
+		photoMsg := tb.NewPhotoUpload(chat.Recipient(), photo)
+		photoMsg.Caption = caption
+		_, _ = myBot.Send(photoMsg)
 	}
 
 }
 
 func BulkSendText(description string, tweetLink string, tweetUserName string) {
 
-	msg := fmt.Sprintf("New Tweet from : @%s .\n\n-------\n\n %s \n\n-------\n\nLink: %s ", tweetUserName, description, tweetLink)
+	message := fmt.Sprintf("New Tweet from : @%s .\n\n-------\n\n %s \n\n-------\n\nLink: %s ", tweetUserName, description, tweetLink)
 	chats, err := subscriber.GetActivatedSubscribers()
 	if err != nil {
 		return
 	}
 
 	for _, chat := range chats {
-		_, _ = myBot.Send(chat, msg)
+		msg := tb.NewMessage(chat.Recipient(), message)
+		_, _ = myBot.Send(msg)
 	}
 
 }
