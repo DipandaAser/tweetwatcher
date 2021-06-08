@@ -12,8 +12,6 @@ import (
 type Configuration struct {
 	Hashtag    string
 	BotToken   string
-	Port       string
-	PublicURL  string
 	MongodbURI string
 	DBName     string
 	// ScrapDelay represent the interval before the scrapper perform another scraping session
@@ -32,10 +30,8 @@ var DB *mongo.Database
 func Init() {
 	ProjectConfig.Hashtag = os.Getenv("HASHTAG")
 	ProjectConfig.BotToken = os.Getenv("BOT_TOKEN")
-	ProjectConfig.Port = os.Getenv("PORT")
 	ProjectConfig.DBName = os.Getenv("DB_NAME")
 	ProjectConfig.MongodbURI = os.Getenv("MONGO_URI")
-	ProjectConfig.PublicURL = os.Getenv("PUBLIC_URL")
 	delay, err := strconv.Atoi(os.Getenv("SCRAP_DELAY"))
 	if err == nil {
 		ProjectConfig.ScrapDelay = delay
@@ -54,12 +50,6 @@ func (config *Configuration) check() error {
 	}
 	if config.BotToken == "" {
 		return errors.New("please specify a \"BOT_TOKEN\" env var")
-	}
-	if config.Port == "" {
-		return errors.New("please specify a \"PORT\" env var")
-	}
-	if config.PublicURL == "" {
-		return errors.New("please specify the \"PUBLIC_URL\"  env var")
 	}
 	if config.MongodbURI == "" {
 		return errors.New("please specify a \"MONGO_URI\" env var")

@@ -1,5 +1,8 @@
 APPNAME=tweetwatcher
 
+run:
+	go run main.go
+
 ## build: build application binary.
 build:build-windows-32 build-windows-64 build-linux-32 build-linux-64 build-macOS-64
 	@echo "Build done!"

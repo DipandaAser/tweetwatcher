@@ -3,6 +3,7 @@ package subscriber
 import (
 	"github.com/DipandaAser/tweetwatcher/config"
 	"go.mongodb.org/mongo-driver/bson"
+	"strconv"
 	"time"
 )
 
@@ -13,8 +14,10 @@ type Chat struct {
 	CreatedAt string `bson:"CreatedAt"`
 }
 
-func (c Chat) Recipient() string {
-	return c.ID
+func (c Chat) Recipient() int64 {
+
+	atoi, _ := strconv.Atoi(c.ID)
+	return int64(atoi)
 }
 
 var collectionName = "Subscriber"
