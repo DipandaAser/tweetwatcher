@@ -131,7 +131,7 @@ func helpCommandHandler(m *tb.Message) {
 	message := "Welcome to Bot Help \n \n"
 
 	for _, command := range getCommands() {
-		message += fmt.Sprintf("- !%s : %s \n", command.Text, command.Description)
+		message += fmt.Sprintf("- /%s : %s \n", command.Text, command.Description)
 	}
 
 	// For channel help
