@@ -6,7 +6,6 @@
 *.test
 *.out
 .idea
-Dockerfile
 app
 .env
 /gcr-build.bat

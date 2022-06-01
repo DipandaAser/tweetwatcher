@@ -16,20 +16,38 @@ Put the .env file in the same directory with the binary and run the binary
 
 ### With sources
 
-Alternatively, to get latest and greatest run:
-
-`go get -u github.com/DipandaAser/tweetwatcher`
-
 - Prerequisites
-    - Golang 1.15+
-    - MongoDB
+  - Golang 1.15+
+
+- Clone the repo
+```shell
+git clone https://github.com/DipandaAser/tweetwatcher.git
+cd  tweetwatcher
+```
 
 - Get dependencies
 ```shell
-go get -d -v ./...
+go mod download
 ```
 
 - Run
 ```shell
 go run main.go
 ```
+
+### With Docker
+
+- Build the image
+```shell
+make docker-build
+```
+
+- Run the container
+  - In foreground
+  ```shell
+  make docker-run
+  ```
+    - In background
+  ```shell
+  make docker-run-d
+  ```
